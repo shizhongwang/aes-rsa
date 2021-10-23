@@ -3,16 +3,38 @@ package com.refinitiv.collab.platform.aesrsa;
 import com.alibaba.fastjson.JSON;
 import com.github.javafaker.Faker;
 import com.github.javafaker.Name;
+import com.refinitiv.collab.platform.aesrsa.util.RSA;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.apache.poi.sl.usermodel.ObjectMetaData;
 import org.apache.tomcat.jni.Time;
 
+import java.util.Map;
 import java.util.TreeMap;
 
 @Log4j2
 public class Main {
     public static void main(String[] args) throws Exception {
+        TreeMap<String, Object> inputs = buildInput();
+        RSAKeys rsaKeys;
+
+        //generate new ras keypair for each round
+        //encrypt and decrypt the same input
+        //check the data
+        rsaKeys = RSAKeys.generate();
+        E2EEncrypt.server(E2EEncrypt.client(inputs, rsaKeys.cliSK, rsaKeys.svrPK), rsaKeys.cliPK, rsaKeys.svrSK);
+
+        rsaKeys = RSAKeys.generate();
+        inputs.remove("sign");
+        E2EEncrypt.server(E2EEncrypt.client(inputs, rsaKeys.cliSK, rsaKeys.svrPK), rsaKeys.cliPK, rsaKeys.svrSK);
+
+        rsaKeys = RSAKeys.generate();
+        inputs.remove("sign");
+        E2EEncrypt.server(E2EEncrypt.client(inputs, rsaKeys.cliSK, rsaKeys.svrPK), rsaKeys.cliPK, rsaKeys.svrSK);
+
+
+        //generate new input for each round
+        //using the same rsa keypair to en&de
         E2EEncrypt.server(E2EEncrypt.client(buildInput(), clientPrivateKey, serverPublicKey), clientPublicKey, serverPrivateKey);
 
         Thread.sleep(1000);
@@ -26,7 +48,7 @@ public class Main {
 
     }
 
-    private static TreeMap<String, Object> buildInput(){
+    private static TreeMap<String, Object> buildInput() {
         Faker faker = new Faker();
         UserInfo userInfo = new UserInfo();
         userInfo.setRealName(faker.name().fullName());
@@ -49,6 +71,7 @@ public class Main {
 
         return params;
     }
+
     public static final String clientPrivateKey = "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKbNojYr8KlqKD/y" +
             "COd7QXu3e4TsrHd4sz3XgDYWEZZgYqIjVDcpcnlztwomgjMj9xSxdpyCc85GOGa0" +
             "lva1fNZpG6KXYS1xuFa9G7FRbaACoCL31TRv8t4TNkfQhQ7e2S7ZktqyUePWYLlz" +
@@ -96,6 +119,31 @@ public class Main {
         private String universityName;
         private String city;
         private String street;
+    }
+
+    @Data
+    public static class RSAKeys {
+        private String cliPK;
+        private String cliSK;
+        private String svrPK;
+        private String svrSK;
+
+        private static String PUBKEY = "publicKey";
+        private static String PRIKEY = "privateKey";
+
+        public static RSAKeys generate() throws Exception {
+            RSAKeys rsaKeys = new RSAKeys();
+
+            Map<String, String> rsaMap = RSA.generateKeyPair();
+            rsaKeys.cliPK = rsaMap.get(PUBKEY);
+            rsaKeys.cliSK = rsaMap.get(PRIKEY);
+
+            Map<String, String> rsaMap2 = RSA.generateKeyPair();
+            rsaKeys.svrPK = rsaMap2.get(PUBKEY);
+            rsaKeys.svrSK = rsaMap2.get(PRIKEY);
+
+            return rsaKeys;
+        }
     }
 
 }
