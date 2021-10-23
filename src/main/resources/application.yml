@@ -1,0 +1,35 @@
+server:
+  port: 80
+logging:
+  config:  classpath:log4j2.xml
+  level:
+    root: INFO
+    javax.activation: info
+    org.apache.catalina: INFO
+    org.apache.commons.beanutils.converters: INFO
+    org.apache.coyote.http11.Http11Processor: INFO
+    org.apache.http: INFO
+    org.apache.tomcat: INFO
+    org.springframework: INFO
+    com.chinamobile.cmss.bdpaas.resource.monitor: DEBUG
+    com.refinitiv.collab.platform.conversation: DEBUG
+spring:
+  profiles:
+    active: ${CLPENV:clp-dev}
+  main:
+    banner-mode: off
+jwt:
+  header: Authorization
+  prefix: Bearer
+  secret: testSecret
+  expiration: 604800
+
+global:
+  debug: true
+
+rap:
+  routing:
+    userTypeService: ${ROUTING_USER_TYPE:clp-dev:usertypes}
+    botManagementService: ${ROUTING_BOT_MANAGEMENT:clp-dev:botmanagement}
+    #userStateService: ${ROUTING_USER_STATE:clp-dev:userstate}
+    chatRoomService: ${ROUTING_CHATROOM:clp-dev:chatroom}

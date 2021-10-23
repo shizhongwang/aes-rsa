@@ -1,0 +1,76 @@
+plugins {
+    id 'org.springframework.boot' version '2.4.5'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+    id 'war'
+}
+
+group = 'com.refinitiv.collab.platform'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+
+    all {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+        url 'https://bams-aws.refinitiv.com/artifactory/release.maven.cloud'
+        credentials(PasswordCredentials)
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compile 'org.springframework.boot:spring-boot-starter-log4j2'
+    compile 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web-services'
+    compileOnly 'org.projectlombok:lombok'
+//    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.projectlombok:lombok'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    compile 'com.github.yitter:yitter-idgenerator:1.0.6'
+    compile 'org.projectlombok:lombok'
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.6'
+    compile 'com.alibaba:fastjson:1.2.49'
+    compile 'com.auth0:java-jwt:3.8.3'
+
+    //codec v1.13, has issue - Last encoded character (before the paddings if any) is a valid base 64 alphabet
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.12'
+    compile 'io.ably:ably-java:1.2.0'
+
+    compile 'io.springfox:springfox-swagger2:2.9.2'
+    compile 'io.springfox:springfox-swagger-ui:2.9.2'
+    compile 'io.swagger:swagger-annotations:1.5.22'
+    compile 'io.swagger:swagger-models:1.5.22'
+    compile 'org.apache.poi:poi:4.0.0'
+    compile 'org.apache.poi:poi-ooxml:4.0.0'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    //for JWT
+    compile 'org.springframework.security:spring-security-jwt:1.0.9.RELEASE'
+    compile 'io.jsonwebtoken:jjwt:0.9.1'
+
+    implementation 'com.refinitiv.collab.platform:routing-java-sdk:0.0.3'
+    compile 'org.apache.commons:commons-lang3'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+apply from: 'gradle/scripts/bootJar.settings.gradle'
+apply from: 'gradle/scripts/printProjectName.task.gradle'
+apply from: 'gradle/scripts/zipRapArtifact.task.gradle'

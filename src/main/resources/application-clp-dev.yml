@@ -1,0 +1,4 @@
+service:
+  ably:
+    jwt_secret: d59iCD_ur9kMamPj
+    jwt_kid: H-KI6Q.pH9EUw
