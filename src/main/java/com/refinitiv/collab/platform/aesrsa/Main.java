@@ -1,25 +1,54 @@
 package com.refinitiv.collab.platform.aesrsa;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.refinitiv.collab.platform.aesrsa.util.*;
-import lombok.AllArgsConstructor;
+import com.github.javafaker.Faker;
+import com.github.javafaker.Name;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.poi.sl.usermodel.ObjectMetaData;
+import org.apache.tomcat.jni.Time;
 
 import java.util.TreeMap;
 
-/**
- * Description: AES+RSA签名，加密 验签，解密
- *
- * @author: wubaoguo
- * @email: wustrive2008@gmail.com
- * @date: 2015/8/13 15:12
- */
-
 @Log4j2
 public class Main {
+    public static void main(String[] args) throws Exception {
+        E2EEncrypt.server(E2EEncrypt.client(buildInput(), clientPrivateKey, serverPublicKey), clientPublicKey, serverPrivateKey);
+
+        Thread.sleep(1000);
+        E2EEncrypt.server(E2EEncrypt.client(buildInput(), clientPrivateKey, serverPublicKey), clientPublicKey, serverPrivateKey);
+
+        Thread.sleep(1000);
+        E2EEncrypt.server(E2EEncrypt.client(buildInput(), clientPrivateKey, serverPublicKey), clientPublicKey, serverPrivateKey);
+
+        Thread.sleep(1000);
+        E2EEncrypt.server(E2EEncrypt.client(buildInput(), clientPrivateKey, serverPublicKey), clientPublicKey, serverPrivateKey);
+
+    }
+
+    private static TreeMap<String, Object> buildInput(){
+        Faker faker = new Faker();
+        UserInfo userInfo = new UserInfo();
+        userInfo.setRealName(faker.name().fullName());
+        userInfo.setCellPhone(faker.phoneNumber().cellPhone());
+        userInfo.setCity(faker.address().city());
+        userInfo.setStreet(faker.address().streetAddress());
+        userInfo.setUniversityName(faker.university().name());
+        String jsonData = JSON.toJSONString(userInfo);
+
+        TreeMap<String, Object> params = new TreeMap<String, Object>();
+        params.put("userid", "152255855");
+        params.put("data", jsonData);
+
+//        params.put("data", "随着Internet网的广泛应用，信息安全问题日益突出，以数据加密技术为核心的信息安全技术也得到了极大的发展。 " +
+//                "目前的数据加密技术根据加密密钥类型可分私钥加密（对称加密）系统和公钥加密（非对称加密）系统。对称加密算法是较传统的加密体制， " +
+//                "通信双方在加/解密过程中使用他们共享的单一密钥，鉴于其算法简单和加密速度快的优点，目前仍然是主流的密码体制之一。 最常用的对称" +
+//                "密码算法是数据加密标准（DES）算法，但是由于DES密钥长度较短，已经不适合当今分布式开放网络对数据加密安全性的要求。 最后，一种新" +
+//                "的基于Rijndael算法对称高级数据加密标准AES取代了数据加密标准DES。 非对称加密由于加/解密钥不同（公钥加密，私钥解密），密钥管" +
+//                "理简单，也得到广泛应用。RSA是非对称加密系统最著名的公钥密码算法。");
+
+        return params;
+    }
     public static final String clientPrivateKey = "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKbNojYr8KlqKD/y" +
             "COd7QXu3e4TsrHd4sz3XgDYWEZZgYqIjVDcpcnlztwomgjMj9xSxdpyCc85GOGa0" +
             "lva1fNZpG6KXYS1xuFa9G7FRbaACoCL31TRv8t4TNkfQhQ7e2S7ZktqyUePWYLlz" +
@@ -59,112 +88,14 @@ public class Main {
             "Nlw3L0iogs9WTIGm3el1SuZLyMnMksnV0NCsuq538cPMNppZRwARb7NXmpmh0KM7" +
             "9fJ/1xqnpo1tgRcv4wIDAQAB";
 
-    public static void main(String[] args) throws Exception {
-        TreeMap<String, Object> params = new TreeMap<String, Object>();
-        params.put("userid", "152255855");
-        params.put("phone", "随着Internet网的广泛应用，信息安全问题日益突出，以数据加密技术为核心的信息安全技术也得到了极大的发展。 " +
-                "目前的数据加密技术根据加密密钥类型可分私钥加密（对称加密）系统和公钥加密（非对称加密）系统。对称加密算法是较传统的加密体制， " +
-                "通信双方在加/解密过程中使用他们共享的单一密钥，鉴于其算法简单和加密速度快的优点，目前仍然是主流的密码体制之一。 最常用的对称" +
-                "密码算法是数据加密标准（DES）算法，但是由于DES密钥长度较短，已经不适合当今分布式开放网络对数据加密安全性的要求。 最后，一种新" +
-                "的基于Rijndael算法对称高级数据加密标准AES取代了数据加密标准DES。 非对称加密由于加/解密钥不同（公钥加密，私钥解密），密钥管" +
-                "理简单，也得到广泛应用。RSA是非对称加密系统最著名的公钥密码算法。");
-
-        client(params);
-
-        server();
-    }
-
-    public static void client(TreeMap<String, Object> params) throws Exception {
-        // 生成RSA签名
-        String sign = EncryUtil.handleRSA(params, clientPrivateKey);
-        params.put("sign", sign);
-
-        String info = JSON.toJSONString(params);
-        //随机生成AES密钥
-        String aesKey = SecureRandomUtil.getRandom(16);
-        //AES加密数据
-        String data = AES.encryptToBase64(ConvertUtils.stringToHexString(info), aesKey);
-
-        // 使用RSA算法将商户自己随机生成的AESkey加密
-        String encryptkey = RSA.encrypt(aesKey, serverPublicKey);
-
-        EncryptedData encryptedData = EncryptedData.builder()
-                .encryptKey(encryptkey)
-                .payload(data)
-                .build();
-        log.info("加密后的请求数据:\n" + JSON.toJSONString(encryptedData));
-
-//        Req.data = data;
-//        Req.encryptkey = encryptkey;
-//
-//
-//        System.out.println("加密后的请求数据:\n" + new Req().toString());
-    }
-
-    public static void server() throws Exception {
-
-        // 验签
-        boolean passSign = EncryUtil.checkDecryptAndSign(Req.data,
-                Req.encryptkey, clientPublicKey, serverPrivateKey);
-
-        if (passSign) {
-            // 验签通过
-            String aeskey = RSA.decrypt(Req.encryptkey,
-                    serverPrivateKey);
-            String data = ConvertUtils.hexStringToString(AES.decryptFromBase64(Req.data,
-                    aeskey));
-
-            JSONObject jsonObj = JSONObject.parseObject(data);
-            System.out.println("解密后的明文:" + jsonObj.toJSONString());
-//
-//            String userid = jsonObj.getString("userid");
-//            String phone = jsonObj.getString("phone");
-//
-//            System.out.println("解密后的明文:userid:" + userid + " phone:" + phone);
-
-        } else {
-            System.out.println("验签失败");
-        }
-    }
-
-    static class Req {
-        public static String data;
-        public static String encryptkey;
-
-        @Override
-        public String toString() {
-            return "data:" + data + "\nencryptkey:" + encryptkey;
-        }
-    }
 
     @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class EncryptedData {
-        private String payload;
-        private String encryptKey;
-
-        public static EncryptedData builder() {
-            return new EncryptedData();
-        }
-
-        public EncryptedData payload(String payload) {
-            this.setPayload(payload);
-            return this;
-        }
-
-        public EncryptedData encryptKey(String key) {
-            this.setEncryptKey(key);
-            return this;
-        }
-
-        public EncryptedData build() {
-            return new EncryptedData(this.payload, this.encryptKey);
-        }
-
-        @Override
-        public String toString() {
-            return "payload:" + payload + "\nencryptkey:" + encryptKey;
-        }
+    public static class UserInfo {
+        private String realName;
+        private String cellPhone;
+        private String universityName;
+        private String city;
+        private String street;
     }
+
 }

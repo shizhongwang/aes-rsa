@@ -35,7 +35,9 @@ public class E2EEncrypt {
                 .payload(data)
                 .build();
 
-        log.info("加密后的数据:\n" + JSON.toJSONString(encryptedData));
+        String jsonString = JSON.toJSONString(encryptedData);
+        String dataEn = String.format("%s, %s", jsonString.length(), jsonString);
+        log.info("DataEn:\n" + dataEn);
         log.info("TimeEn: " + Duration.between(instantStart, Instant.now()).toMillis());
         return encryptedData;
     }
@@ -56,8 +58,12 @@ public class E2EEncrypt {
 
             JSONObject jsonObj = JSONObject.parseObject(data);
             jsonObj.remove("sign");
-            log.info("解密后的明文:\n" + jsonObj.toJSONString());
+
+            String jsonString = JSON.toJSONString(jsonObj);
+            String dataEn = String.format("%s, %s", jsonString.length(), jsonString);
+            log.info("DataDe:\n" + dataEn);
             log.info("TimeDe: " + Duration.between(instantStart, Instant.now()).toMillis());
+            log.info("\n");
         } else {
             log.info("验签失败");
         }

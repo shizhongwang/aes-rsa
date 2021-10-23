@@ -65,6 +65,7 @@ dependencies {
 
     implementation 'com.refinitiv.collab.platform:routing-java-sdk:0.0.3'
     compile 'org.apache.commons:commons-lang3'
+    compile 'com.github.javafaker:javafaker:1.0.2'
 }
 
 test {
