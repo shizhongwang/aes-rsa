@@ -17,7 +17,7 @@ public class E2EEncrypt {
     public static EncryptedData client(TreeMap<String, Object> params, String clientPrivateKey, String serverPublicKey) throws Exception {
         Instant instantStart = Instant.now();
 
-        // 生成RSA签名
+        // 生成RSA签名, insert into input data
         String sign = EncryUtil.handleRSA(params, clientPrivateKey);
         params.put("sign", sign);
 

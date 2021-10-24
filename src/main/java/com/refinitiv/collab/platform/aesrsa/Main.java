@@ -2,35 +2,35 @@ package com.refinitiv.collab.platform.aesrsa;
 
 import com.alibaba.fastjson.JSON;
 import com.github.javafaker.Faker;
-import com.github.javafaker.Name;
-import com.refinitiv.collab.platform.aesrsa.util.RSA;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.apache.poi.sl.usermodel.ObjectMetaData;
-import org.apache.tomcat.jni.Time;
 
-import java.util.Map;
 import java.util.TreeMap;
 
 @Log4j2
 public class Main {
     public static void main(String[] args) throws Exception {
         TreeMap<String, Object> inputs = buildInput();
-        RSAKeys rsaKeys;
+
+        RSAKeypair cliKP = RSAKeypair.build();
+        RSAKeypair svrKP = RSAKeypair.build();
 
         //generate new ras keypair for each round
         //encrypt and decrypt the same input
         //check the data
-        rsaKeys = RSAKeys.generate();
-        E2EEncrypt.server(E2EEncrypt.client(inputs, rsaKeys.cliSK, rsaKeys.svrPK), rsaKeys.cliPK, rsaKeys.svrSK);
+        cliKP = RSAKeypair.build();
+        svrKP = RSAKeypair.build();
+        E2EEncrypt.server(E2EEncrypt.client(inputs, cliKP.getPrivateKey(), svrKP.getPublicKey()), cliKP.getPublicKey(), svrKP.getPrivateKey());
 
-        rsaKeys = RSAKeys.generate();
+        cliKP = RSAKeypair.build();
+        svrKP = RSAKeypair.build();
         inputs.remove("sign");
-        E2EEncrypt.server(E2EEncrypt.client(inputs, rsaKeys.cliSK, rsaKeys.svrPK), rsaKeys.cliPK, rsaKeys.svrSK);
+        E2EEncrypt.server(E2EEncrypt.client(inputs, cliKP.getPrivateKey(), svrKP.getPublicKey()), cliKP.getPublicKey(), svrKP.getPrivateKey());
 
-        rsaKeys = RSAKeys.generate();
+        cliKP = RSAKeypair.build();
+        svrKP = RSAKeypair.build();
         inputs.remove("sign");
-        E2EEncrypt.server(E2EEncrypt.client(inputs, rsaKeys.cliSK, rsaKeys.svrPK), rsaKeys.cliPK, rsaKeys.svrSK);
+        E2EEncrypt.server(E2EEncrypt.client(inputs, cliKP.getPrivateKey(), svrKP.getPublicKey()), cliKP.getPublicKey(), svrKP.getPrivateKey());
 
 
         //generate new input for each round
@@ -111,7 +111,6 @@ public class Main {
             "Nlw3L0iogs9WTIGm3el1SuZLyMnMksnV0NCsuq538cPMNppZRwARb7NXmpmh0KM7" +
             "9fJ/1xqnpo1tgRcv4wIDAQAB";
 
-
     @Data
     public static class UserInfo {
         private String realName;
@@ -120,30 +119,4 @@ public class Main {
         private String city;
         private String street;
     }
-
-    @Data
-    public static class RSAKeys {
-        private String cliPK;
-        private String cliSK;
-        private String svrPK;
-        private String svrSK;
-
-        private static String PUBKEY = "publicKey";
-        private static String PRIKEY = "privateKey";
-
-        public static RSAKeys generate() throws Exception {
-            RSAKeys rsaKeys = new RSAKeys();
-
-            Map<String, String> rsaMap = RSA.generateKeyPair();
-            rsaKeys.cliPK = rsaMap.get(PUBKEY);
-            rsaKeys.cliSK = rsaMap.get(PRIKEY);
-
-            Map<String, String> rsaMap2 = RSA.generateKeyPair();
-            rsaKeys.svrPK = rsaMap2.get(PUBKEY);
-            rsaKeys.svrSK = rsaMap2.get(PRIKEY);
-
-            return rsaKeys;
-        }
-    }
-
 }
