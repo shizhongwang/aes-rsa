@@ -1,15 +1,48 @@
 package com.refinitiv.collab.platform.aesrsa;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.github.javafaker.Faker;
+import com.refinitiv.collab.platform.aesrsa.sts.EdpClient;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 
+import java.io.IOException;
 import java.util.TreeMap;
 
 @Log4j2
 public class Main {
     public static void main(String[] args) throws Exception {
+        testSts();
+
+//        testEncryption();
+        System.exit(0);
+    }
+
+    private static void testSts() throws IOException {
+        EdpClient edpClient = new EdpClient();
+//        final String tokenUrl = "https://api.refinitiv.com/auth/oauth2/v1/token";         //this is prod
+        final String tokenUrl = "https://api.ppe.refinitiv.com/auth/oauth2/beta1/token";    //this is ppe
+        final String apiUrl = "https://ybutkyes83.execute-api.eu-west-1.amazonaws.com/ppe/api/clp-dev/channelmanager/sendChannel";
+
+        String user = "bot_agent.messenger02@refinitiv.com";
+
+//        String sts = edpClient.requestToken("stephen.wang@refinitv.com", "Catmouse1", "ff12cd3431f746d0b60d6df351db1ad230d1ee75", tokenUrl);
+        String sts = edpClient.requestToken(user, "Welcome1", "ff12cd3431f746d0b60d6df351db1ad230d1ee75", tokenUrl);
+        JSONObject jsonObj = JSONObject.parseObject(sts);
+        log.info(jsonObj.toJSONString());
+
+        String refToken = jsonObj.getString("refresh_token");
+        String stsNew = edpClient.refreshToken(user, refToken, "ff12cd3431f746d0b60d6df351db1ad230d1ee75", tokenUrl);
+        JSONObject jsonObj2 = JSONObject.parseObject(stsNew);
+        String stsToken = jsonObj2.getString("access_token");
+        log.info(jsonObj2.toJSONString());
+
+        String sendChannel = edpClient.webInvoke(stsToken, apiUrl);
+        log.info(sendChannel);
+    }
+
+    private static void testEncryption() throws Exception {
         TreeMap<String, Object> inputs = buildInput();
 
         RSAKeypair cliKP = RSAKeypair.build();
@@ -45,7 +78,6 @@ public class Main {
 
         Thread.sleep(1000);
         E2EEncrypt.server(E2EEncrypt.client(buildInput(), clientPrivateKey, serverPublicKey), clientPublicKey, serverPrivateKey);
-
     }
 
     private static TreeMap<String, Object> buildInput() {
